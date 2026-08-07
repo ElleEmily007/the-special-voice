@@ -10,7 +10,7 @@ import { Loader2, PhoneCall } from "lucide-react";
 const schema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Enter a valid email"),
+  email: z.string().email("Enter a valid email address"),
   phone: z
     .string()
     .min(10, "Enter a valid US phone number")
