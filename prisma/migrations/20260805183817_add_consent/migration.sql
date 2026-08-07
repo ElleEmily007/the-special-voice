@@ -1,8 +1,3 @@
--- AlterTable
-ALTER TABLE "Customer" ADD COLUMN     "optedOut" BOOLEAN NOT NULL DEFAULT false;
-ALTER TABLE "Customer" ADD COLUMN     "optedOutAt" TIMESTAMP(3);
-ALTER TABLE "Customer" ADD COLUMN     "consentedAt" TIMESTAMP(3);
-
 -- CreateTable
 CREATE TABLE "Consent" (
     "id" TEXT NOT NULL,
