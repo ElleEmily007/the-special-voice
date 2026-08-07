@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Customer {
+  id              String    @id @default(cuid())
+  stripeId        String    @unique
+  name            String
+  email           String    @unique
+  phone           String
+  voice           String    @default("female") // "male" | "female"
+  testament       String    @default("new") // "old" | "new" | "both"
+  frequency       Int       @default(1) // 1 | 2 | 3
+  subscriptionId  String?
+  planId          String? // stripe price id
+  status          String    @default("trial") // "trial" | "active" | "paused" | "cancelled"
+  trialEndsAt     DateTime?
+  storyIndex      Int       @default(0) // position of next story to deliver
+  lastDeliveredAt DateTime?
+  optedOut        Boolean   @default(false)
+  optedOutAt      DateTime?
+  consentedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Consent {
+  id          String   @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String
+  phone       String
+  consentText String
+  ip          String?
+  createdAt   DateTime @default(now())
+}
