@@ -15,6 +15,9 @@ export async function POST(req: NextRequest) {
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
+      // Account default enables Managed Payments; this product isn't set up for it
+      // (eligible tax codes / MoR). Use standard Checkout as merchant of record.
+      managed_payments: { enabled: false },
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
         trial_period_days: TRIAL_DAYS,
