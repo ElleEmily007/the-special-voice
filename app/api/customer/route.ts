@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { upsertCustomerByStripeOrEmail } from "@/lib/customer-upsert";
 import { z } from "zod";
 
 const UpdateSchema = z.object({
@@ -55,26 +56,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No Stripe customer found for session" }, { status: 400 });
     }
 
-    const customer = await prisma.customer.upsert({
-      where: { stripeId },
-      update: {
-        name: data.name,
-        phone: data.phone,
-        voice: data.voice,
-        testament: data.testament,
-        frequency: data.frequency,
-        email: session.customer_email ?? undefined,
-      },
-      create: {
-        stripeId,
-        name: data.name,
-        email: session.customer_email ?? "",
-        phone: data.phone,
-        voice: data.voice,
-        testament: data.testament,
-        frequency: data.frequency,
-        status: "trial",
-      },
+    const customer = await upsertCustomerByStripeOrEmail({
+      stripeId,
+      email: session.customer_email ?? "",
+      name: data.name,
+      phone: data.phone,
+      voice: data.voice,
+      testament: data.testament,
+      frequency: data.frequency,
+      status: "trial",
     });
 
     return NextResponse.json({ customer });

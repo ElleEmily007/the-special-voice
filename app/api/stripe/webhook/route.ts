@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { upsertCustomerByStripeOrEmail } from "@/lib/customer-upsert";
 import Stripe from "stripe";
 
 export const config = { api: { bodyParser: false } };
@@ -40,22 +41,14 @@ export async function POST(req: NextRequest) {
             ? session.subscription
             : session.subscription?.id ?? null;
 
-        // Customer record is created/updated in onboarding; here we ensure stripeId is linked
-        await prisma.customer.upsert({
-          where: { stripeId },
-          update: {
-            subscriptionId: subscriptionId ?? undefined,
-            status: "trial",
-          },
-          create: {
-            stripeId,
-            name: "",
-            email: session.customer_email ?? "",
-            phone: "",
-            subscriptionId: subscriptionId ?? undefined,
-            planId: session.metadata?.planId ?? null,
-            status: "trial",
-          },
+        // Customer record is created/updated in onboarding; here we ensure stripeId is linked.
+        // Match by email too so re-checkout with a new Stripe customer id does not collide.
+        await upsertCustomerByStripeOrEmail({
+          stripeId,
+          email: session.customer_email ?? "",
+          subscriptionId: subscriptionId ?? undefined,
+          planId: session.metadata?.planId ?? null,
+          status: "trial",
         });
       }
       break;
