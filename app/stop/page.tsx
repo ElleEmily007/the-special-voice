@@ -56,7 +56,7 @@ export default function StopPage() {
             You&apos;ve been unsubscribed
           </h1>
           <p className="text-[#0f2035]/60 mb-6 leading-relaxed">
-            You will no longer receive automated text messages or ringless voicemails from
+            You will no longer receive ringless voicemails or multi-media messages from
             Cleveribility, LLC / The Special Voice. If this was a mistake, please contact support.
           </p>
           <a
@@ -82,7 +82,7 @@ export default function StopPage() {
           </h1>
           <p className="text-[#0f2035]/55 text-sm mt-2 leading-relaxed">
             Enter the cell phone number that receives messages from The Special Voice. We will stop
-            all automated texts and ringless voicemails to that number.
+            all ringless voicemails and multi-media messages to that number.
           </p>
         </div>
 

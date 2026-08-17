@@ -15,10 +15,49 @@ const schema = z.object({
     .string()
     .min(10, "Enter a valid US phone number")
     .regex(/^\+?[\d\s\-().]{10,}$/, "Invalid phone number format"),
-  consent: z.boolean().refine((v) => v === true, { message: "You must agree to continue" }),
+  consentRvm: z.boolean().refine((v) => v === true, { message: "You must agree to continue" }),
+  consentMms: z.boolean().refine((v) => v === true, { message: "You must agree to continue" }),
 });
 
 type FormData = z.infer<typeof schema>;
+
+const legalLinkClass = "underline text-[#0f2035] hover:text-[#e8b800]";
+
+function LegalStopLink() {
+  return (
+    <Link href="/stop" className={legalLinkClass} onClick={(e) => e.stopPropagation()}>
+      www.cleveribility.com/stop
+    </Link>
+  );
+}
+
+function LegalPrivacyLink() {
+  return (
+    <a
+      href="https://cleveribility.com/privacy"
+      target="_blank"
+      rel="noopener noreferrer"
+      className={legalLinkClass}
+      onClick={(e) => e.stopPropagation()}
+    >
+      Privacy Policy
+    </a>
+  );
+}
+
+function LegalTermsLink() {
+  return (
+    <a
+      href="https://cleveribility.com/terms-of-use"
+      target="_blank"
+      rel="noopener noreferrer"
+      className={legalLinkClass}
+      onClick={(e) => e.stopPropagation()}
+    >
+      Terms of Service
+    </a>
+  );
+}
 
 function OptInContent() {
   const router = useRouter();
@@ -32,7 +71,7 @@ function OptInContent() {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { consent: false },
+    defaultValues: { consentRvm: false, consentMms: false },
   });
 
   async function onSubmit(data: FormData) {
@@ -134,28 +173,47 @@ function OptInContent() {
               )}
             </div>
 
-            <div>
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  {...register("consent")}
-                  type="checkbox"
-                  className="mt-1 w-4 h-4 rounded border-[#0f2035]/25 text-[#e8b800] focus:ring-[#e8b800]/50 flex-shrink-0"
-                />
-                <span className="text-[#0f2035]/70 text-xs leading-relaxed">
-                  I agree to receive automated text messages and/or rvm (ringless voice mail) from
-                  Cleveribility, LLC regarding my free trial and subscription to our services
-                  selected by you. Message frequency varies. Message and data rates may apply. When
-                  you wish to STOP or unsubscribe, contact us at our opt-out form at{" "}
-                  <Link href="/stop" className="underline text-[#0f2035] hover:text-[#e8b800]">
-                    www.cleveribility.com/stop
-                  </Link>
-                  . I would like to receive offers/news and accept our Privacy Policy and Terms of
-                  Service. Consent is not a condition of purchase.
-                </span>
-              </label>
-              {errors.consent && (
-                <p className="text-red-500 text-xs mt-1">{errors.consent.message}</p>
-              )}
+            <div className="space-y-4">
+              <div>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    {...register("consentRvm")}
+                    type="checkbox"
+                    className="mt-1 w-4 h-4 rounded border-[#0f2035]/25 text-[#e8b800] focus:ring-[#e8b800]/50 flex-shrink-0"
+                  />
+                  <span className="text-[#0f2035]/70 text-xs leading-relaxed">
+                    I agree to receive educational and informational automated ringless voicemail
+                    from Cleveribility, LLC regarding my free trial and subscription to our
+                    services selected by you. Message frequency varies. Message and data rates may
+                    apply. When you wish to STOP or unsubscribe, contact us at our opt-out form at{" "}
+                    <LegalStopLink />. See our <LegalPrivacyLink /> and <LegalTermsLink /> to learn
+                    more. Consent is not a condition of purchase.
+                  </span>
+                </label>
+                {errors.consentRvm && (
+                  <p className="text-red-500 text-xs mt-1">{errors.consentRvm.message}</p>
+                )}
+              </div>
+              <div>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    {...register("consentMms")}
+                    type="checkbox"
+                    className="mt-1 w-4 h-4 rounded border-[#0f2035]/25 text-[#e8b800] focus:ring-[#e8b800]/50 flex-shrink-0"
+                  />
+                  <span className="text-[#0f2035]/70 text-xs leading-relaxed">
+                    I agree to receive educational and informational multi-media messages from
+                    Cleveribility, LLC regarding my free trial and subscription to our services
+                    selected by you. Message frequency varies. Message and data rates may apply.
+                    When you wish to STOP or unsubscribe, contact us at our opt-out form at{" "}
+                    <LegalStopLink />. See our <LegalPrivacyLink /> and <LegalTermsLink /> to learn
+                    more. Consent is not a condition of purchase.
+                  </span>
+                </label>
+                {errors.consentMms && (
+                  <p className="text-red-500 text-xs mt-1">{errors.consentMms.message}</p>
+                )}
+              </div>
             </div>
 
             {serverError && (
