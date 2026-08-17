@@ -15,8 +15,7 @@ const schema = z.object({
     .string()
     .min(10, "Enter a valid US phone number")
     .regex(/^\+?[\d\s\-().]{10,}$/, "Invalid phone number format"),
-  consentRvm: z.boolean().refine((v) => v === true, { message: "You must agree to continue" }),
-  consentMms: z.boolean().refine((v) => v === true, { message: "You must agree to continue" }),
+  consentSms: z.boolean().refine((v) => v === true, { message: "You must agree to continue" }),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -71,7 +70,7 @@ function OptInContent() {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { consentRvm: false, consentMms: false },
+    defaultValues: { consentSms: false },
   });
 
   async function onSubmit(data: FormData) {
@@ -173,47 +172,25 @@ function OptInContent() {
               )}
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    {...register("consentRvm")}
-                    type="checkbox"
-                    className="mt-1 w-4 h-4 rounded border-[#0f2035]/25 text-[#e8b800] focus:ring-[#e8b800]/50 flex-shrink-0"
-                  />
-                  <span className="text-[#0f2035]/70 text-xs leading-relaxed">
-                    I agree to receive educational and informational automated ringless voicemail
-                    from Cleveribility, LLC regarding my free trial and subscription to our
-                    services selected by you. Message frequency varies. Message and data rates may
-                    apply. When you wish to STOP or unsubscribe, contact us at our opt-out form at{" "}
-                    <LegalStopLink />. See our <LegalPrivacyLink /> and <LegalTermsLink /> to learn
-                    more. Consent is not a condition of purchase.
-                  </span>
-                </label>
-                {errors.consentRvm && (
-                  <p className="text-red-500 text-xs mt-1">{errors.consentRvm.message}</p>
-                )}
-              </div>
-              <div>
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    {...register("consentMms")}
-                    type="checkbox"
-                    className="mt-1 w-4 h-4 rounded border-[#0f2035]/25 text-[#e8b800] focus:ring-[#e8b800]/50 flex-shrink-0"
-                  />
-                  <span className="text-[#0f2035]/70 text-xs leading-relaxed">
-                    I agree to receive educational and informational multi-media messages from
-                    Cleveribility, LLC regarding my free trial and subscription to our services
-                    selected by you. Message frequency varies. Message and data rates may apply.
-                    When you wish to STOP or unsubscribe, contact us at our opt-out form at{" "}
-                    <LegalStopLink />. See our <LegalPrivacyLink /> and <LegalTermsLink /> to learn
-                    more. Consent is not a condition of purchase.
-                  </span>
-                </label>
-                {errors.consentMms && (
-                  <p className="text-red-500 text-xs mt-1">{errors.consentMms.message}</p>
-                )}
-              </div>
+            <div>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  {...register("consentSms")}
+                  type="checkbox"
+                  className="mt-1 w-4 h-4 rounded border-[#0f2035]/25 text-[#e8b800] focus:ring-[#e8b800]/50 flex-shrink-0"
+                />
+                <span className="text-[#0f2035]/70 text-xs leading-relaxed">
+                  I agree to receive educational and informational automated text messages from
+                  Cleveribility, LLC regarding my free trial and subscription to our services
+                  selected by you. Message frequency varies. Message and data rates may apply. When
+                  you wish to STOP or unsubscribe, contact us at our opt-out form at{" "}
+                  <LegalStopLink />. See our <LegalPrivacyLink /> and <LegalTermsLink /> to learn
+                  more. Consent is not a condition of purchase.
+                </span>
+              </label>
+              {errors.consentSms && (
+                <p className="text-red-500 text-xs mt-1">{errors.consentSms.message}</p>
+              )}
             </div>
 
             {serverError && (
