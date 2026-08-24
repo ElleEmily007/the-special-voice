@@ -1,6 +1,6 @@
 # The Special Voice
 
-Daily stories delivered as Ringless Voicemail (RVM) — subscription-based, powered by Next.js, Stripe, and TextP2P. Non-denominational: customers pick a male or female voice and Old Testament, New Testament, or both.
+Daily stories delivered as Ringless Voicemail (RVM) — subscription-based, powered by Next.js, Stripe, and TextP2P. Non-denominational: customers pick a male or female voice and Old Testament, New Testament, or both. 
 
 ---
 
