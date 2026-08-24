@@ -103,7 +103,7 @@ function OptInContent() {
           </div>
           <h1 className="text-2xl font-extrabold text-[#0f2035]">Start Your Free Trial</h1>
           <p className="text-[#0f2035]/55 text-sm mt-2 leading-relaxed">
-            Please provide your contact details below to begin your 10-day free trial with us.
+            Please provide your contact details below to begin your free trial with us.
           </p>
         </div>
 

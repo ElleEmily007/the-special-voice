@@ -10,11 +10,11 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: "The Special Voice — Daily Bible Stories Delivered to Your Voicemail",
   description:
-    "Hear the Bible every day. Warm, engaging Bible stories delivered straight to your phone as ringless voicemail — no app, no effort. Try free for 10 days.",
+    "Hear the Bible every day. Warm, engaging Bible stories delivered straight to your phone as ringless voicemail — no app, no effort. Start with a free trial.",
   keywords: ["Bible stories", "ringless voicemail", "daily Bible", "Christian subscription", "RVM"],
   openGraph: {
     title: "The Special Voice",
-    description: "Daily Bible stories delivered to your voicemail. Start free for 10 days.",
+    description: "Daily Bible stories delivered to your voicemail. Start with a free trial.",
     siteName: "The Special Voice",
     type: "website",
   },

@@ -14,7 +14,8 @@ export default function PricingTable() {
             Choose Your Daily Rhythm
           </h2>
           <p className="text-white/55 mt-3 max-w-xl mx-auto">
-            Start free for 10 days. Then pick the pace that fits your life.
+            Free trial length depends on your plan. You receive stories at your plan&apos;s
+            frequency from day one.
           </p>
         </div>
 
@@ -23,8 +24,8 @@ export default function PricingTable() {
           <div>
             <p className="text-white font-semibold">Not sure yet? Try it free first.</p>
             <p className="text-white/55 text-sm">
-              10 days, 1 story/day — a card is required to start, but you won&apos;t be charged
-              until day 11.
+              9 days (1/day), 6 days (2/day), or 3 days (3/day). A card is required to start — you
+              won&apos;t be charged until the trial ends.
             </p>
           </div>
           <Link

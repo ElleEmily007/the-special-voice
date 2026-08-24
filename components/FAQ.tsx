@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "How does the free trial work?",
-    a: "You get 10 days of daily stories, starting at 1 per day. A card is required to start the trial, but you will not be charged until day 11. If you cancel before then, you won't be billed at all.",
+    a: "Trial length depends on the plan you choose: 9 days for Once Daily, 6 days for Twice Daily, or 3 days for Three Times Daily. You receive stories at your plan's frequency during the trial. A card is required to start, but you will not be charged until the trial ends. If you cancel before then, you won't be billed at all.",
   },
   {
     q: "Can I pause or cancel?",

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { upsertCustomerByStripeOrEmail } from "@/lib/customer-upsert";
+import { getPlanById, getPlanFrequency, getTrialDays } from "@/lib/plans";
 import { z } from "zod";
 
 const UpdateSchema = z.object({
@@ -19,15 +21,47 @@ const OnboardSchema = z.object({
   phone: z.string().min(7),
   voice: z.enum(["male", "female"]),
   testament: z.enum(["old", "new", "both"]),
-  frequency: z.number().int().min(1).max(3),
 });
+
+function resolvePlanId(session: Stripe.Checkout.Session): string | null {
+  const fromSession = session.metadata?.planId;
+  if (fromSession) return fromSession;
+  if (session.subscription && typeof session.subscription !== "string") {
+    return session.subscription.metadata?.planId ?? null;
+  }
+  return null;
+}
 
 export async function GET(req: NextRequest) {
   const stripeId = req.nextUrl.searchParams.get("stripeId");
   const email = req.nextUrl.searchParams.get("email");
+  const sessionId = req.nextUrl.searchParams.get("sessionId");
+
+  if (sessionId) {
+    try {
+      const { stripe } = await import("@/lib/stripe");
+      const session = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ["subscription"],
+      });
+      const planId = resolvePlanId(session);
+      if (!planId || !getPlanById(planId)) {
+        return NextResponse.json({ error: "Plan not found for session" }, { status: 404 });
+      }
+      const plan = getPlanById(planId)!;
+      return NextResponse.json({
+        planId: plan.id,
+        planName: plan.name,
+        frequency: plan.frequency,
+        trialDays: plan.trialDays,
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
+  }
 
   if (!stripeId && !email) {
-    return NextResponse.json({ error: "stripeId or email required" }, { status: 400 });
+    return NextResponse.json({ error: "stripeId, email, or sessionId required" }, { status: 400 });
   }
 
   const customer = await prisma.customer.findFirst({
@@ -46,15 +80,27 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const data = OnboardSchema.parse(body);
 
-    // Retrieve Stripe session to get customer ID
     const { stripe } = await import("@/lib/stripe");
-    const session = await stripe.checkout.sessions.retrieve(data.sessionId);
+    const session = await stripe.checkout.sessions.retrieve(data.sessionId, {
+      expand: ["subscription"],
+    });
     const stripeId =
       typeof session.customer === "string" ? session.customer : session.customer?.id;
 
     if (!stripeId) {
       return NextResponse.json({ error: "No Stripe customer found for session" }, { status: 400 });
     }
+
+    const planId = resolvePlanId(session);
+    if (!planId || !getPlanById(planId)) {
+      return NextResponse.json(
+        { error: "Could not resolve purchased plan from checkout session" },
+        { status: 400 },
+      );
+    }
+
+    const frequency = getPlanFrequency(planId);
+    const trialDays = getTrialDays(planId);
 
     const customer = await upsertCustomerByStripeOrEmail({
       stripeId,
@@ -63,11 +109,12 @@ export async function POST(req: NextRequest) {
       phone: data.phone,
       voice: data.voice,
       testament: data.testament,
-      frequency: data.frequency,
+      frequency,
+      planId,
       status: "trial",
     });
 
-    return NextResponse.json({ customer });
+    return NextResponse.json({ customer, trialDays, frequency, planId });
   } catch (err: unknown) {
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: err.issues }, { status: 422 });

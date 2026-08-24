@@ -98,9 +98,11 @@ Create one product per plan (monthly only):
 | The Special Voice — Twice Daily | 2x/day | $19.95/mo |
 | The Special Voice — Three Times Daily | 3x/day | $24.95/mo |
 
-Copy each Price ID into your `.env.local`. All plans use a 10-day free trial — a
-card is required to start (Stripe `trial_period_days: 10`), and the first
-charge happens automatically on day 11 unless the customer cancels.
+Copy each Price ID into your `.env.local`. Trial length is set in code per plan
+(9 / 6 / 3 days for once / twice / thrice). Do not attach a free trial on the
+Stripe Price itself — the app passes `trial_period_days` at Checkout. A card is
+required to start; the first charge happens when that plan's trial ends unless
+the customer cancels.
 
 ### 6. Run the development server
 
@@ -268,8 +270,9 @@ git push -u origin main
 | Twice Daily | 2x/day | $19.95 |
 | Three Times Daily | 3x/day | $24.95 |
 
-Free trial: 10 days, starting at 1 story/day. A card is required to start the
-trial; the first charge happens automatically on day 11 unless cancelled.
+Free trial by plan: 9 days (1/day), 6 days (2/day), or 3 days (3/day), at the
+plan's delivery frequency. A card is required to start; the first charge happens
+automatically when the trial ends unless cancelled.
 
 ---
 

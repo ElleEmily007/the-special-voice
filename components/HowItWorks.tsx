@@ -6,7 +6,7 @@ const steps = [
     step: "1",
     title: "Choose Your Plan",
     description:
-      "Pick how many stories you want each day — 1, 2, or 3. Start with a free 10-day trial (a card is required, but you won't be charged until day 11).",
+      "Pick how many stories you want each day — 1, 2, or 3. Your free trial matches that plan: 9 days at 1/day, 6 days at 2/day, or 3 days at 3/day (card required; no charge until the trial ends).",
   },
   {
     icon: Settings2,
@@ -63,7 +63,7 @@ export default function HowItWorks() {
         <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
             { value: "2 Voices", label: "Choose male or female narration" },
-            { value: "10 Days", label: "Free trial before your first charge" },
+            { value: "3–9 Days", label: "Free trial length depends on your plan" },
             { value: "3 Plans", label: "From 1 to 3 stories a day" },
             { value: "2", label: "Old & New Testament to choose from" },
           ].map(({ value, label }) => (

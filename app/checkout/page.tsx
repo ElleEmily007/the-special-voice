@@ -60,7 +60,8 @@ function CheckoutContent() {
             <div>
               <h1 className="text-2xl font-extrabold text-[#0f2035]">Choose Your Plan</h1>
               <p className="text-[#0f2035]/55 text-sm mt-1">
-                10-day free trial on all plans. Card required to start — first charge on day 11.
+                Free trial length depends on your plan: 9 days (1/day), 6 days (2/day), or 3 days
+                (3/day). Card required — first charge after the trial ends.
               </p>
             </div>
 
@@ -131,8 +132,9 @@ function CheckoutContent() {
               </div>
 
               <div className="bg-green-500/15 border border-green-500/30 rounded-lg px-4 py-3 text-xs text-green-400 mb-5">
-                <span className="font-semibold">10-day free trial</span> — a card is required to
-                start, but you won&apos;t be charged until day 11.
+                <span className="font-semibold">{activePlan.trialDays}-day free trial</span> at{" "}
+                {activePlan.frequency}x/day — a card is required to start, but you won&apos;t be
+                charged until day {activePlan.trialDays + 1}.
               </div>
 
               {error && (

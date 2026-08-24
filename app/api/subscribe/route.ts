@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { getPriceId, TRIAL_DAYS } from "@/lib/plans";
+import { getPriceId, getTrialDays } from "@/lib/plans";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       managed_payments: { enabled: false },
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
-        trial_period_days: TRIAL_DAYS,
+        trial_period_days: getTrialDays(planId),
         metadata: { planId },
       },
       customer_email: email ?? undefined,

@@ -47,7 +47,7 @@ export default function Hero() {
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#e8b800] hover:bg-[#f5c842] text-[#0f2035] font-bold text-lg px-8 py-4 rounded-full shadow-lg shadow-[#e8b800]/20 transition-all hover:shadow-[#e8b800]/40 hover:-translate-y-0.5"
           >
             <Play size={18} className="fill-current" />
-            Start Free for 10 Days
+            Start Free Trial
           </Link>
           <a
             href="#how-it-works"
@@ -59,7 +59,8 @@ export default function Hero() {
 
         {/* Trust micro-copy */}
         <p className="text-white/40 text-sm">
-          Card required to start &nbsp;·&nbsp; Not charged until day 11 &nbsp;·&nbsp; Plans from $12.95/mo
+          Card required to start &nbsp;·&nbsp; Trial length by plan (9 / 6 / 3 days) &nbsp;·&nbsp;
+          Plans from $12.95/mo
         </p>
 
         {/* Voicemail visual mockup */}
