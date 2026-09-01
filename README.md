@@ -53,9 +53,10 @@ STRIPE_PRICE_THRICE_MONTHLY="price_..."
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
-# TextP2P (ringless voicemail) — leave DRY_RUN=true until your account is approved
+# TextP2P (ringless voicemail) — leave DRY_RUN=true until live test passes
 TEXTP2P_API_KEY=""
 TEXTP2P_ACCOUNT_ID=""
+TEXTP2P_CALLER_ID=""   # optional: toll-free / virtual number (digits only)
 DRY_RUN="true"
 
 # Admin quality-check page at /admin/test
@@ -138,12 +139,11 @@ Copy the webhook signing secret into `STRIPE_WEBHOOK_SECRET`.
   (`isFreeTrialEnd`) and the first paid-period clip (`isChargeStart`).
 - [`lib/textp2p.ts`](lib/textp2p.ts) wraps the TextP2P ringless-voicemail API.
   While `DRY_RUN=true` (the default), sends are only logged — no real
-  voicemail goes out. Set `DRY_RUN=false` once your TextP2P account is
-  approved and `TEXTP2P_API_KEY` / `TEXTP2P_ACCOUNT_ID` are set.
-- **Important:** TextP2P's documented RVM endpoint expects a `.wav` file
-  under 1 MB and under 1 minute. The current clips are `.mp3`. Confirm with
-  TextP2P that `.mp3` is accepted for your account, or add a conversion step
-  before launch.
+  voicemail goes out. Set `DRY_RUN=false` after a successful live test from
+  `/admin/test`. Optional `TEXTP2P_CALLER_ID` sets the callback / missed-call
+  number on each drop.
+- Clips are **`.mp3`**, served at public HTTPS URLs. Cleveribility's TextP2P
+  account accepts MP3. Keep each clip under ~1 minute and ~1 MB.
 - [`app/api/deliver/route.ts`](app/api/deliver/route.ts) sends the next
   story/stories to one customer or all active/trial customers, protected by
   `CRON_SECRET`.
@@ -239,6 +239,52 @@ git push -u origin main
 
 ---
 
+## Go live with TextP2P RVM (Phase 1)
+
+Daily delivery runs via Vercel Cron at **14:00 UTC** ([`vercel.json`](vercel.json)).
+MMS is not enabled yet — RVM only.
+
+### 1. Set Production env vars in Vercel
+
+| Variable | Purpose |
+|----------|---------|
+| `TEXTP2P_API_KEY` | TextP2P Application page → `AUTH_USERNAME` |
+| `TEXTP2P_ACCOUNT_ID` | TextP2P Application page → `AUTH_SECRET` |
+| `TEXTP2P_CALLER_ID` | Optional caller ID (digits only, e.g. toll-free) |
+| `NEXT_PUBLIC_APP_URL` | Public HTTPS site URL — TextP2P fetches audio from here |
+| `ADMIN_SECRET` | Passphrase for `/admin/test` |
+| `ADMIN_PHONE_BILL` | Bill's test cell (digits, e.g. `7703287729`) |
+| `ADMIN_PHONE_ME` | Your test cell (digits, e.g. `8438551695`) |
+| `CRON_SECRET` | Protects daily cron + manual deliver route |
+| `DRY_RUN` | Keep `true` until step 4 succeeds |
+
+Do not attach a free trial on Stripe Prices — trial length is set in code per plan.
+
+### 2. Deploy with `DRY_RUN=true`
+
+Redeploy after saving env vars. Open `/admin/test`, enter `ADMIN_SECRET`, and
+send a clip to Bill and yourself — status should show **(dry run)** and Vercel
+logs should show `[textp2p][DRY_RUN] Would send RVM...`.
+
+### 3. Confirm audio is publicly reachable
+
+TextP2P must HTTP-fetch each clip, e.g.
+`https://your-domain.com/audio/female/000-welcome.mp3` — no login, no localhost.
+
+### 4. Flip live and test again
+
+Set `DRY_RUN=false` in Vercel → redeploy → send one clip each to Bill and you
+from `/admin/test`. Confirm voicemails arrive. Check Vercel logs for
+`[textp2p] RVM accepted HTTP 200`.
+
+### 5. Monitor the daily cron
+
+After the next 14:00 UTC run, check Vercel function logs for
+`/api/cron/daily`. Trial and active customers who have completed onboarding
+receive the next clip(s) at their plan frequency.
+
+---
+
 ## Pointing GoDaddy Domain to Vercel
 
 > Takes ~5–10 minutes. DNS propagation can take up to 48 hours.
@@ -278,10 +324,9 @@ automatically when the trial ends unless cancelled.
 
 ## Phase 2 Roadmap
 
-- Confirm TextP2P audio format requirements (`.wav` vs `.mp3`) and get the
-  account fully approved, then flip `DRY_RUN=false`
-- Record additional stories beyond the current 8-story active sequence
-- 10DLC / carrier compliance review for RVM at scale
+- Record additional stories beyond the current active sequence
+- MMS add-on ($7.95) for subscribers who opt in — ~1 MMS per 5 RVM clips
+- 10DLC / carrier compliance at scale
 - Admin dashboard (subscriber counts, delivery logs, payment health)
 - Email welcome sequence via Resend or SendGrid
 - Pause/resume delivery from the customer portal

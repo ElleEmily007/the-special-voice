@@ -5,11 +5,8 @@
  * Endpoint: POST https://app.textp2p.com/api-sendrvm.php
  * Params: AUTH_USERNAME, AUTH_SECRET, PHONE, AUDIOFILE, CALLERID? (optional), SENDDATE? (optional)
  *
- * IMPORTANT: TextP2P's documented RVM endpoint requires the AUDIOFILE to be a
- * publicly accessible .wav file, under 1 MB and under 1 minute long. The
- * story clips in this project are .mp3. Before going live, either confirm
- * with TextP2P that .mp3 is accepted for your account, or convert clips to
- * .wav during the audio pipeline.
+ * Cleveribility's TextP2P account accepts public .mp3 URLs. TextP2P docs also
+ * mention .wav under 1 MB and under 1 minute — keep clips within those limits.
  */
 
 const TEXTP2P_ENDPOINT = "https://app.textp2p.com/api-sendrvm.php";
@@ -25,23 +22,30 @@ function isDryRun(): boolean {
   return process.env.DRY_RUN !== "false";
 }
 
+function maskPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 4) return "***";
+  return `***${digits.slice(-4)}`;
+}
+
 /**
  * Sends a ringless voicemail drop to a phone number.
- * In DRY_RUN mode (default, until TEXTP2P credentials are approved and
- * DRY_RUN=false is set), this only logs the intended send and returns ok.
+ * When DRY_RUN is not "false", logs the intended send and returns ok without calling TextP2P.
  */
 export async function sendRvm(phone: string, audioUrl: string): Promise<SendRvmResult> {
   const dryRun = isDryRun();
 
   if (dryRun) {
-    console.log(`[textp2p][DRY_RUN] Would send RVM to ${phone}: ${audioUrl}`);
+    console.log(`[textp2p][DRY_RUN] Would send RVM to ${maskPhone(phone)}: ${audioUrl}`);
     return { ok: true, dryRun: true };
   }
 
   const username = process.env.TEXTP2P_API_KEY;
   const secret = process.env.TEXTP2P_ACCOUNT_ID;
+  const callerId = process.env.TEXTP2P_CALLER_ID?.replace(/\D/g, "");
 
   if (!username || !secret) {
+    console.error("[textp2p] Missing TEXTP2P_API_KEY or TEXTP2P_ACCOUNT_ID");
     return { ok: false, dryRun: false, error: "Missing TEXTP2P_API_KEY or TEXTP2P_ACCOUNT_ID" };
   }
 
@@ -52,6 +56,13 @@ export async function sendRvm(phone: string, audioUrl: string): Promise<SendRvmR
       PHONE: phone,
       AUDIOFILE: audioUrl,
     });
+    if (callerId) {
+      body.set("CALLERID", callerId);
+    }
+
+    console.log(
+      `[textp2p] Sending RVM to ${maskPhone(phone)}${callerId ? ` callerId=${callerId}` : ""}: ${audioUrl}`,
+    );
 
     const res = await fetch(TEXTP2P_ENDPOINT, {
       method: "POST",
@@ -61,12 +72,15 @@ export async function sendRvm(phone: string, audioUrl: string): Promise<SendRvmR
 
     if (!res.ok) {
       const text = await res.text().catch(() => "");
+      console.error(`[textp2p] RVM failed HTTP ${res.status} to ${maskPhone(phone)}: ${text || "(empty body)"}`);
       return { ok: false, dryRun: false, status: res.status, error: text || `HTTP ${res.status}` };
     }
 
+    console.log(`[textp2p] RVM accepted HTTP ${res.status} for ${maskPhone(phone)}`);
     return { ok: true, dryRun: false, status: res.status };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
+    console.error(`[textp2p] RVM error for ${maskPhone(phone)}: ${message}`);
     return { ok: false, dryRun: false, error: message };
   }
 }

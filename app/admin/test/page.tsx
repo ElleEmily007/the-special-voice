@@ -178,8 +178,9 @@ export default function AdminTestPage() {
             marks the take used in the live daily-delivery sequence.
           </p>
           <p className="text-[#0f2035]/35 text-xs mt-2">
-            While <code>DRY_RUN</code> is on (default until TextP2P is approved), sends are logged
-            only and no real voicemail is delivered.
+            With <code>DRY_RUN=true</code>, sends are logged only — no voicemail is delivered.
+            Set <code>DRY_RUN=false</code> in Vercel after credentials and a successful live test.
+            Audio must be a public HTTPS URL (your deployed site + <code>/audio/...</code>).
           </p>
         </div>
 
