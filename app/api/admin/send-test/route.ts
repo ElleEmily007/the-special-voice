@@ -11,8 +11,17 @@ export async function POST(req: NextRequest) {
     clipId?: string;
   };
 
-  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!process.env.ADMIN_SECRET) {
+    return NextResponse.json(
+      { error: "ADMIN_SECRET is not configured on the server (set it in .env or Vercel)" },
+      { status: 500 },
+    );
+  }
+  if (!secret || secret !== process.env.ADMIN_SECRET) {
+    return NextResponse.json(
+      { error: "Incorrect passphrase — use the same value as ADMIN_SECRET on the server" },
+      { status: 401 },
+    );
   }
 
   if (recipient !== "bill" && recipient !== "me") {

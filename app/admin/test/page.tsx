@@ -135,6 +135,31 @@ function VoiceColumn({ voice, secret }: { voice: Voice; secret: string }) {
 export default function AdminTestPage() {
   const [secretInput, setSecretInput] = useState("");
   const [unlocked, setUnlocked] = useState<string | null>(null);
+  const [unlockError, setUnlockError] = useState("");
+  const [unlocking, setUnlocking] = useState(false);
+
+  async function tryUnlock() {
+    if (!secretInput) return;
+    setUnlockError("");
+    setUnlocking(true);
+    try {
+      const res = await fetch("/api/admin/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret: secretInput }),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) {
+        setUnlockError(data.error ?? "Incorrect passphrase");
+        return;
+      }
+      setUnlocked(secretInput);
+    } catch {
+      setUnlockError("Network error. Please try again.");
+    } finally {
+      setUnlocking(false);
+    }
+  }
 
   if (!unlocked) {
     return (
@@ -145,21 +170,26 @@ export default function AdminTestPage() {
           </div>
           <h1 className="text-lg font-bold text-[#0f2035] mb-1">Admin Access</h1>
           <p className="text-[#0f2035]/50 text-sm mb-5">
-            Enter the admin passphrase to review voice quality and send test deliveries.
+            Enter the admin passphrase (<code className="text-xs">ADMIN_SECRET</code> from your
+            server env) to review voice quality and send test deliveries.
           </p>
           <input
             type="password"
             value={secretInput}
             onChange={(e) => setSecretInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && secretInput && setUnlocked(secretInput)}
+            onKeyDown={(e) => e.key === "Enter" && void tryUnlock()}
             placeholder="Passphrase"
             className="w-full border border-[#0f2035]/15 rounded-xl px-4 py-3 text-[#0f2035] mb-3 focus:outline-none focus:ring-2 focus:ring-[#e8b800]/50 focus:border-[#e8b800]"
           />
+          {unlockError && (
+            <p className="text-red-500 text-xs mb-3 text-left">{unlockError}</p>
+          )}
           <button
-            onClick={() => secretInput && setUnlocked(secretInput)}
-            disabled={!secretInput}
-            className="w-full bg-[#e8b800] hover:bg-[#f5c842] disabled:opacity-50 text-[#0f2035] font-bold py-3 rounded-full transition-colors"
+            onClick={() => void tryUnlock()}
+            disabled={!secretInput || unlocking}
+            className="w-full bg-[#e8b800] hover:bg-[#f5c842] disabled:opacity-50 text-[#0f2035] font-bold py-3 rounded-full transition-colors flex items-center justify-center gap-2"
           >
+            {unlocking ? <Loader2 size={16} className="animate-spin" /> : null}
             Unlock
           </button>
         </div>
