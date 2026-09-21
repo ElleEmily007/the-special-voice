@@ -14,18 +14,111 @@ model Customer {
   phone           String
   voice           String    @default("female") // "male" | "female"
   testament       String    @default("new") // "old" | "new" | "both"
+  trackKey        String    @default("new") // Track.key the customer reads through
   frequency       Int       @default(1) // 1 | 2 | 3
   subscriptionId  String?
   planId          String? // stripe price id
   status          String    @default("trial") // "trial" | "active" | "paused" | "cancelled"
   trialEndsAt     DateTime?
-  storyIndex      Int       @default(0) // position of next story to deliver
+  storyIndex      Int       @default(0) // legacy pointer, superseded by Delivery rows
   lastDeliveredAt DateTime?
   optedOut        Boolean   @default(false)
   optedOutAt      DateTime?
   consentedAt     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  deliveries Delivery[]
+}
+
+/// A Bible story. One story can have several recorded clips (takes or parts).
+model Story {
+  id          String   @id @default(cuid())
+  testament   String // "old" | "new"
+  storyNumber Int
+  title       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  clips Clip[]
+
+  @@unique([testament, storyNumber])
+  @@index([testament])
+}
+
+/// A single recorded segment, with one audio file per voice.
+model Clip {
+  id            String  @id @default(cuid())
+  storyId       String
+  take          Int     @default(1)
+  label         String? // optional part label, e.g. "Part 2"
+  maleUrl       String?
+  femaleUrl     String?
+  maleBytes     Int?
+  femaleBytes   Int?
+  maleSeconds   Float?
+  femaleSeconds Float?
+  status        String  @default("draft") // "draft" | "live" | "retired"
+  role          String  @default("story") // "story" | "welcome" | "trialEnd" | "chargeStart"
+  legacyId      String? @unique // id from the old lib/stories.ts manifest
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  story      Story       @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  trackItems TrackItem[]
+  deliveries Delivery[]
+
+  @@unique([storyId, take])
+  @@index([status])
+  @@index([role])
+}
+
+/// An ordered reading track. A clip may appear in more than one track, so an
+/// Old/New Testament clip can also sit in the combined "both" track.
+model Track {
+  id        String   @id @default(cuid())
+  key       String   @unique // "new" | "old" | "both"
+  name      String
+  createdAt DateTime @default(now())
+
+  items TrackItem[]
+}
+
+/// The only place delivery ordering lives.
+model TrackItem {
+  id       String @id @default(cuid())
+  trackId  String
+  clipId   String
+  position Int
+
+  track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  clip  Clip  @relation(fields: [clipId], references: [id], onDelete: Cascade)
+
+  @@unique([trackId, position])
+  @@unique([trackId, clipId])
+  @@index([trackId, position])
+}
+
+/// One row per clip sent to one customer. The unique constraint on
+/// [customerId, clipId] is the duplicate-send guard, and the table is the
+/// delivery audit log used to work out what to send next.
+model Delivery {
+  id             String   @id @default(cuid())
+  customerId     String
+  clipId         String
+  voice          String // "male" | "female"
+  audioUrl       String?
+  sentAt         DateTime @default(now())
+  ok             Boolean  @default(true)
+  providerStatus Int?
+  error          String?
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  clip     Clip     @relation(fields: [clipId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, clipId])
+  @@index([customerId, sentAt])
 }
 
 model Consent {

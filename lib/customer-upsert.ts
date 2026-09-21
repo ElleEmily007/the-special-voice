@@ -32,7 +32,11 @@ export async function upsertCustomerByStripeOrEmail(data: CustomerWrite) {
     ...(data.name !== undefined ? { name: data.name } : {}),
     ...(data.phone !== undefined ? { phone: data.phone } : {}),
     ...(data.voice !== undefined ? { voice: data.voice } : {}),
-    ...(data.testament !== undefined ? { testament: data.testament } : {}),
+    // trackKey is what delivery sequencing reads, so it has to follow the
+    // chosen testament rather than sitting on its default.
+    ...(data.testament !== undefined
+      ? { testament: data.testament, trackKey: data.testament }
+      : {}),
     ...(data.frequency !== undefined ? { frequency: data.frequency } : {}),
     ...(data.subscriptionId !== undefined ? { subscriptionId: data.subscriptionId } : {}),
     ...(data.planId !== undefined ? { planId: data.planId } : {}),
@@ -54,6 +58,7 @@ export async function upsertCustomerByStripeOrEmail(data: CustomerWrite) {
       phone: data.phone ?? "",
       voice: data.voice,
       testament: data.testament,
+      ...(data.testament !== undefined ? { trackKey: data.testament } : {}),
       frequency: data.frequency,
       subscriptionId: data.subscriptionId ?? undefined,
       planId: data.planId ?? undefined,

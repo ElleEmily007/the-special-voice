@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { sendRvm } from "@/lib/textp2p";
-import { getAllClipsForVoice, absoluteAudioUrl, type Voice } from "@/lib/stories";
+import { requireAdmin } from "@/lib/admin-auth";
+import { audioUrlForVoice, type Voice } from "@/lib/content";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
@@ -11,17 +13,9 @@ export async function POST(req: NextRequest) {
     clipId?: string;
   };
 
-  if (!process.env.ADMIN_SECRET) {
-    return NextResponse.json(
-      { error: "ADMIN_SECRET is not configured on the server (set it in .env or Vercel)" },
-      { status: 500 },
-    );
-  }
-  if (!secret || secret !== process.env.ADMIN_SECRET) {
-    return NextResponse.json(
-      { error: "Incorrect passphrase — use the same value as ADMIN_SECRET on the server" },
-      { status: 401 },
-    );
+  const auth = requireAdmin(req, secret);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
   if (recipient !== "bill" && recipient !== "me") {
@@ -32,23 +26,39 @@ export async function POST(req: NextRequest) {
   if (!phone) {
     return NextResponse.json(
       { error: `Missing ${recipient === "bill" ? "ADMIN_PHONE_BILL" : "ADMIN_PHONE_ME"} env var` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
   if (!voice || (voice !== "male" && voice !== "female") || !clipId) {
-    return NextResponse.json({ error: "voice ('male' | 'female') and clipId are required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "voice ('male' | 'female') and clipId are required" },
+      { status: 400 },
+    );
   }
 
-  const clips = getAllClipsForVoice(voice);
-  const found = clips.find(({ clip }) => clip.id === clipId);
-  if (!found) {
+  const clip = await prisma.clip.findUnique({
+    where: { id: clipId },
+    include: { story: { select: { title: true } } },
+  });
+  if (!clip) {
     return NextResponse.json({ error: "Clip not found" }, { status: 404 });
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const audioUrl = absoluteAudioUrl(appUrl, found.url);
+  const audioUrl = audioUrlForVoice(clip, voice);
+  if (!audioUrl) {
+    return NextResponse.json(
+      { error: `This clip has no ${voice} recording yet` },
+      { status: 400 },
+    );
+  }
+
   const result = await sendRvm(phone, audioUrl);
 
-  return NextResponse.json({ ...result, phone, audioUrl, title: found.clip.title });
+  return NextResponse.json({
+    ...result,
+    phone,
+    audioUrl,
+    title: `${clip.story.title}${clip.label ? ` (${clip.label})` : ""}`,
+  });
 }

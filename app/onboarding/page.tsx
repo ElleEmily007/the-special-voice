@@ -51,7 +51,26 @@ function OnboardingContent() {
 
   const selectedVoice = watch("voice");
   const [playingPreview, setPlayingPreview] = useState<string | null>(null);
+  const [previewUrls, setPreviewUrls] = useState<{ male: string | null; female: string | null }>({
+    male: null,
+    female: null,
+  });
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // The welcome clip lives in the database, so the preview keeps working once
+  // the audio moves to the bucket and public/audio is removed.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/welcome-audio")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((urls: { male: string | null; female: string | null } | null) => {
+        if (!cancelled && urls) setPreviewUrls(urls);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function playPreview(voice: "male" | "female") {
     if (playingPreview === voice) {
@@ -59,10 +78,14 @@ function OnboardingContent() {
       setPlayingPreview(null);
       return;
     }
+
+    const src = previewUrls[voice];
+    if (!src) return;
+
     audioRef.current?.pause();
-    const audio = new Audio(`/audio/${voice}/000-welcome.mp3`);
+    const audio = new Audio(src);
     audioRef.current = audio;
-    audio.play();
+    void audio.play();
     setPlayingPreview(voice);
     audio.onended = () => setPlayingPreview(null);
   }
@@ -258,11 +281,12 @@ function OnboardingContent() {
                           </div>
                           <button
                             type="button"
+                            disabled={!previewUrls[value as "male" | "female"]}
                             onClick={(e) => {
                               e.preventDefault();
                               playPreview(value as "male" | "female");
                             }}
-                            className="w-8 h-8 rounded-full bg-[#0f2035]/8 hover:bg-[#0f2035]/15 flex items-center justify-center flex-shrink-0 transition-colors"
+                            className="w-8 h-8 rounded-full bg-[#0f2035]/8 hover:bg-[#0f2035]/15 disabled:opacity-40 disabled:hover:bg-[#0f2035]/8 flex items-center justify-center flex-shrink-0 transition-colors"
                             aria-label={`Preview ${label} voice`}
                           >
                             {playingPreview === value ? (

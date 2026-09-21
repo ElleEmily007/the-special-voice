@@ -132,7 +132,11 @@ export async function PATCH(req: NextRequest) {
 
     const customer = await prisma.customer.update({
       where: { stripeId },
-      data: updates,
+      data: {
+        ...updates,
+        // Sequencing reads trackKey, so it has to move with the testament.
+        ...(updates.testament !== undefined ? { trackKey: updates.testament } : {}),
+      },
     });
 
     return NextResponse.json({ customer });

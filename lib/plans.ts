@@ -70,6 +70,11 @@ export function getPlanById(id: string): Plan | undefined {
   return PLANS.find((p) => p.id === id);
 }
 
+/** Maps a Stripe price back to a plan, so webhook updates can resync us. */
+export function getPlanByPriceId(priceId: string): Plan | undefined {
+  return PLANS.find((p) => p.monthlyPriceId === priceId);
+}
+
 export function getPriceId(planId: string): string {
   const plan = getPlanById(planId);
   if (!plan) throw new Error(`Plan ${planId} not found`);

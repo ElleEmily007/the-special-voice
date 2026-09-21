@@ -1,34 +1,28 @@
+/**
+ * Frozen snapshot of the old lib/stories.ts manifest.
+ *
+ * The database is the source of truth for story content now. This file exists
+ * only so scripts/import-existing-content.ts stays runnable — it is what maps
+ * the files still sitting in public/audio/ onto Story and Clip rows. Once the
+ * bucket upload has been verified in production, this and public/audio/ can
+ * both be deleted.
+ */
 export type Voice = "male" | "female";
 
 export interface StoryClip {
-  /** Unique id for this specific audio clip (one story number can have several clips/takes). */
   id: string;
-  /** Story number as grouped in the source recordings (000, 001, 002...). */
   storyNumber: number;
-  /** Human readable title. */
   title: string;
-  /** Take/part number within the story number. */
   take: number;
-  /** File name inside public/audio/male/ or public/audio/female/. */
   maleFile: string;
   femaleFile: string;
-  /**
-   * Whether this clip is used in the live daily-delivery sequence.
-   * Clips with active:false are alternate takes kept only for quality review
-   * on the admin test page.
-   */
+  /** Was part of the live delivery sequence; becomes status "live". */
   active: boolean;
-  /** Position in the active delivery sequence (only set when active is true). */
   index?: number;
-  /** This clip is the last free-trial delivery (day 10). */
   isFreeTrialEnd?: boolean;
-  /** This clip is the first delivery after the trial ends and billing starts (day 11). */
   isChargeStart?: boolean;
 }
 
-// All 13 clips recorded so far, for both the David (male) and Sarah (female) voice.
-// Filenames below map 1:1 by position to the original files in resources/David Voice
-// and resources/Sarah Voice, copied into public/audio/{male,female}/.
 export const STORY_CLIPS: StoryClip[] = [
   {
     id: "000-welcome",
@@ -158,29 +152,3 @@ export const STORY_CLIPS: StoryClip[] = [
     index: 7,
   },
 ];
-
-/** All 13 clips for a voice, in original recording order — used by the admin QA/test page. */
-export function getAllClipsForVoice(voice: Voice): { clip: StoryClip; url: string }[] {
-  return STORY_CLIPS.map((clip) => ({
-    clip,
-    url: `/audio/${voice}/${voice === "male" ? clip.maleFile : clip.femaleFile}`,
-  }));
-}
-
-/** The live daily-delivery sequence: only "active" clips, ordered by index. */
-export function getActiveSequence(): StoryClip[] {
-  return STORY_CLIPS.filter((c) => c.active).sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
-}
-
-/** Get the clip to deliver next for a customer, given their current storyIndex and voice. */
-export function getClipForDelivery(storyIndex: number, voice: Voice): { clip: StoryClip; url: string } | null {
-  const sequence = getActiveSequence();
-  const clip = sequence[storyIndex];
-  if (!clip) return null;
-  const file = voice === "male" ? clip.maleFile : clip.femaleFile;
-  return { clip, url: `/audio/${voice}/${file}` };
-}
-
-export function absoluteAudioUrl(appUrl: string, relativeUrl: string): string {
-  return `${appUrl.replace(/\/$/, "")}${relativeUrl}`;
-}

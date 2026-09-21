@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { upsertCustomerByStripeOrEmail } from "@/lib/customer-upsert";
+import { getPlanByPriceId } from "@/lib/plans";
 import Stripe from "stripe";
 
 export const config = { api: { bodyParser: false } };
@@ -66,11 +67,18 @@ export async function POST(req: NextRequest) {
           ? "cancelled"
           : sub.status;
 
+      // An upgrade in the billing portal changes the price without telling us
+      // the plan, so map the price back to a plan and resync the frequency —
+      // otherwise we would keep delivering at the old rate.
+      const priceId = sub.items.data[0]?.price?.id;
+      const plan = priceId ? getPlanByPriceId(priceId) : undefined;
+
       await prisma.customer.updateMany({
         where: { stripeId },
         data: {
           status,
           subscriptionId: sub.id,
+          ...(plan ? { planId: plan.id, frequency: plan.frequency } : {}),
         },
       });
       break;
