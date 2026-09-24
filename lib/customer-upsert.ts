@@ -11,6 +11,7 @@ type CustomerWrite = {
   subscriptionId?: string | null;
   planId?: string | null;
   status?: string;
+  trialEndsAt?: Date | null;
 };
 
 /**
@@ -41,6 +42,7 @@ export async function upsertCustomerByStripeOrEmail(data: CustomerWrite) {
     ...(data.subscriptionId !== undefined ? { subscriptionId: data.subscriptionId } : {}),
     ...(data.planId !== undefined ? { planId: data.planId } : {}),
     ...(data.status !== undefined ? { status: data.status } : {}),
+    ...(data.trialEndsAt !== undefined ? { trialEndsAt: data.trialEndsAt } : {}),
   };
 
   if (existing) {
@@ -63,6 +65,7 @@ export async function upsertCustomerByStripeOrEmail(data: CustomerWrite) {
       subscriptionId: data.subscriptionId ?? undefined,
       planId: data.planId ?? undefined,
       status: data.status ?? "trial",
+      trialEndsAt: data.trialEndsAt ?? undefined,
     },
   });
 }

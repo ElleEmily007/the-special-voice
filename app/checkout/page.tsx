@@ -1,14 +1,16 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Check, Zap, ChevronLeft, Loader2 } from "lucide-react";
 import { PLANS } from "@/lib/plans";
 
 function CheckoutContent() {
   const params = useSearchParams();
+  const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState(params.get("plan") ?? "twice");
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -16,17 +18,36 @@ function CheckoutContent() {
     if (plan) setSelectedPlan(plan);
   }, [params]);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/optin")
+      .then((res) => {
+        if (cancelled) return;
+        if (!res.ok) {
+          const plan = params.get("plan");
+          router.replace(plan ? `/optin?plan=${encodeURIComponent(plan)}` : "/optin");
+          return;
+        }
+        setReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) router.replace("/optin");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [params, router]);
+
   async function handleCheckout() {
     setLoading(true);
     setError("");
     try {
-      const email = params.get("email") ?? undefined;
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId: selectedPlan, email }),
+        body: JSON.stringify({ planId: selectedPlan }),
       });
-      const data = await res.json() as { url?: string; error?: string };
+      const data = (await res.json()) as { url?: string; error?: string };
       if (data.url) {
         window.location.href = data.url;
       } else {
@@ -42,16 +63,24 @@ function CheckoutContent() {
   const activePlan = PLANS.find((p) => p.id === selectedPlan) ?? PLANS[1];
   const price = activePlan.monthlyPrice;
 
+  if (!ready) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fdf8ee]">
+        <Loader2 size={32} className="animate-spin text-[#0f2035]" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#fdf8ee] py-12 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Back */}
         <Link
-          href="/"
+          href={params.get("plan") ? `/optin?plan=${encodeURIComponent(params.get("plan")!)}` : "/optin"}
           className="inline-flex items-center gap-1 text-[#0f2035]/50 hover:text-[#0f2035] text-sm mb-8 transition-colors"
         >
           <ChevronLeft size={16} />
-          Back to home
+          Back to sign-up
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">

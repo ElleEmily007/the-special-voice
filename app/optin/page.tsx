@@ -1,11 +1,11 @@
 "use client";
-import { useState, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
-import { Loader2, PhoneCall } from "lucide-react";
+import { Loader2, Pause, PhoneCall, Play } from "lucide-react";
 
 const schema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -15,6 +15,8 @@ const schema = z.object({
     .string()
     .min(10, "Enter a valid US phone number")
     .regex(/^\+?[\d\s\-().]{10,}$/, "Invalid phone number format"),
+  voice: z.enum(["male", "female"]),
+  testament: z.enum(["new", "old", "both"]),
   consentSms: z.boolean().refine((v) => v === true, { message: "You must agree to continue" }),
 });
 
@@ -67,11 +69,49 @@ function OptInContent() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { consentSms: false },
+    defaultValues: { consentSms: false, voice: "female", testament: "new" },
   });
+
+  const selectedVoice = watch("voice");
+  const [playingPreview, setPlayingPreview] = useState<string | null>(null);
+  const [previewUrls, setPreviewUrls] = useState<{ male: string | null; female: string | null }>({
+    male: null,
+    female: null,
+  });
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/welcome-audio")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((urls: { male: string | null; female: string | null } | null) => {
+        if (!cancelled && urls) setPreviewUrls(urls);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function playPreview(voice: "male" | "female") {
+    if (playingPreview === voice) {
+      audioRef.current?.pause();
+      setPlayingPreview(null);
+      return;
+    }
+    const src = previewUrls[voice];
+    if (!src) return;
+    audioRef.current?.pause();
+    const audio = new Audio(src);
+    audioRef.current = audio;
+    void audio.play();
+    setPlayingPreview(voice);
+    audio.onended = () => setPlayingPreview(null);
+  }
 
   async function onSubmit(data: FormData) {
     setServerError("");
@@ -86,9 +126,10 @@ function OptInContent() {
         setServerError(String(json.error ?? "Something went wrong. Please try again."));
         return;
       }
-      const qs = new URLSearchParams({ email: data.email });
+      const qs = new URLSearchParams();
       if (plan) qs.set("plan", plan);
-      router.push(`/checkout?${qs.toString()}`);
+      const query = qs.toString();
+      router.push(query ? `/checkout?${query}` : "/checkout");
     } catch {
       setServerError("Network error. Please try again.");
     }
@@ -103,7 +144,7 @@ function OptInContent() {
           </div>
           <h1 className="text-2xl font-extrabold text-[#0f2035]">Start Your Free Trial</h1>
           <p className="text-[#0f2035]/55 text-sm mt-2 leading-relaxed">
-            Please provide your contact details below to begin your free trial with us.
+            Please tell us how to reach you, and which voice and Bible you want, before payment.
           </p>
         </div>
 
@@ -170,6 +211,75 @@ function OptInContent() {
               {errors.phone && (
                 <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
               )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#0f2035] mb-2">
+                Choose a voice<span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { value: "male", label: "Male", sub: "David — warm, engaging" },
+                  { value: "female", label: "Female", sub: "Sarah — British, clear" },
+                ].map(({ value, label, sub }) => (
+                  <label key={value} className="cursor-pointer">
+                    <input {...register("voice")} type="radio" value={value} className="sr-only peer" />
+                    <div className="border-2 border-[#0f2035]/12 peer-checked:border-[#e8b800] peer-checked:bg-[#e8b800]/8 rounded-xl p-3 transition-all hover:border-[#0f2035]/25">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[#0f2035] font-semibold text-sm">{label}</p>
+                          <p className="text-[#0f2035]/40 text-[10px] mt-0.5">{sub}</p>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={!previewUrls[value as "male" | "female"]}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            playPreview(value as "male" | "female");
+                          }}
+                          className="w-8 h-8 rounded-full bg-[#0f2035]/8 hover:bg-[#0f2035]/15 disabled:opacity-40 disabled:hover:bg-[#0f2035]/8 flex items-center justify-center flex-shrink-0 transition-colors"
+                          aria-label={`Preview ${label} voice`}
+                        >
+                          {playingPreview === value ? (
+                            <Pause size={13} className="text-[#0f2035]" />
+                          ) : (
+                            <Play size={13} className="text-[#0f2035] ml-0.5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <p className="text-[#0f2035]/40 text-xs mt-1.5">
+                You selected: {selectedVoice === "male" ? "Male (David)" : "Female (Sarah)"}.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#0f2035] mb-2">
+                Where would you like to start?<span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: "new", label: "New Testament", sub: "Start in the NT" },
+                  { value: "old", label: "Old Testament", sub: "Start in the OT" },
+                  { value: "both", label: "Both Together", sub: "Complete Bible" },
+                ].map(({ value, label, sub }) => (
+                  <label key={value} className="cursor-pointer">
+                    <input
+                      {...register("testament")}
+                      type="radio"
+                      value={value}
+                      className="sr-only peer"
+                    />
+                    <div className="border-2 border-[#0f2035]/12 peer-checked:border-[#e8b800] peer-checked:bg-[#e8b800]/8 rounded-xl p-3 text-center transition-all hover:border-[#0f2035]/25">
+                      <p className="text-[#0f2035] font-semibold text-xs">{label}</p>
+                      <p className="text-[#0f2035]/40 text-[10px] mt-0.5">{sub}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div>

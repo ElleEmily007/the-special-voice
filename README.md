@@ -215,7 +215,7 @@ files have not moved yet — the existing `Clip` rows still point at
 each `Clip`, never the filesystem, so those 26 files are purely a one-time
 import. `/admin/content` counts any clip still pointing at `/audio/...` and
 shows a plain-language banner until step 2 has been run, which is the signal
-that deleting the folder is still unsafe. The onboarding voice preview reads
+that deleting the folder is still unsafe. The sign-up voice preview reads
 the welcome clip from the database through `/api/welcome-audio`, so it keeps
 working after the folder is gone.
 
@@ -224,7 +224,8 @@ working after the folder is gone.
 ## Voice, Testament & Delivery
 
 - Customers choose a **male (David)** or **female (Sarah)** voice and **Old
-  Testament / New Testament / Both** during onboarding, with an in-browser
+  Testament / New Testament / Both** on the sign-up page, before payment, with an
+  in-browser
   audio preview of each voice.
 - Story content lives in the database, not in the repo. A **`Story`** groups
   the **`Clip`** rows recorded for it (takes and parts), each clip holding one
@@ -352,7 +353,7 @@ Day to day, content is added through `/admin/content` — no deploy required.
 app/
   page.tsx                  ← Landing page (Hero, How It Works, Pricing, FAQ)
   checkout/page.tsx         ← Plan selection + Stripe checkout redirect
-  onboarding/page.tsx       ← Post-payment setup: name, phone, voice, testament, frequency
+  onboarding/page.tsx       ← Congratulations after Stripe (trial started)
   portal/page.tsx           ← Customer self-service portal
   admin/layout.tsx          ← Shared admin shell: one passphrase gate + nav
   admin/page.tsx            ← Admin hub linking the tools below
@@ -496,8 +497,10 @@ from `/admin/test`. Confirm voicemails arrive. Check Vercel logs for
 ### 5. Monitor the daily cron
 
 After the next 14:00 UTC run, check Vercel function logs for
-`/api/cron/daily`. Trial and active customers who have completed onboarding
-receive the next clip(s) at their plan frequency. The response and logs call
+`/api/cron/daily`. Trial and active customers with a phone number receive
+the next clip(s) at their plan frequency. Someone who just signed up already
+got today's stories, so the same-day run skips them and the next ones go out
+tomorrow. The response and logs call
 out two things worth watching: `outOfContent` lists anyone whose track ran dry
 mid-run, and a `Content runway low` warning fires when the tightest subscriber
 is within three days of the end of the library. The runway is also shown at

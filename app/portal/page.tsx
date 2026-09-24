@@ -149,7 +149,7 @@ export default function PortalPage() {
               </button>
               <p className="text-[#0f2035]/40 text-xs mt-4">
                 Don&apos;t have an account?{" "}
-                <Link href="/checkout" className="text-[#0f2035] underline">
+                <Link href="/optin" className="text-[#0f2035] underline">
                   Start your free trial
                 </Link>
               </p>
@@ -234,7 +234,8 @@ export default function PortalPage() {
               <h3 className="font-bold text-[#0f2035] mb-1">Manage Subscription</h3>
               <p className="text-[#0f2035]/50 text-sm mb-4">
                 Upgrade, downgrade, update your payment method, or cancel — all through
-                Stripe&apos;s secure billing portal.
+                Stripe&apos;s secure billing portal. To pause deliveries, or to change your voice
+                or Bible, email us.
               </p>
               {error && (
                 <div className="flex items-center gap-2 text-red-500 text-sm mb-3">

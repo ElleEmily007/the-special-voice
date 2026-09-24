@@ -49,3 +49,5 @@ AGENTS.md
 
 # raw voice recordings — production copies live in public/audio/
 /resources
+.vercel
+.env*

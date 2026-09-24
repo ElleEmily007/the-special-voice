@@ -17,11 +17,11 @@ const faqs = [
   },
   {
     q: "Can I choose a male or female voice?",
-    a: "Yes! During sign-up you'll choose between a male voice (David) or a female voice (Sarah). You can preview both before deciding.",
+    a: "Yes. During sign-up you choose a male voice (David) or a female voice (Sarah), and you can preview both before you pay. To change it later, email us.",
   },
   {
     q: "Can I choose Old or New Testament?",
-    a: "Yes! During sign-up you'll choose whether you want to start with the Old Testament, the New Testament, or receive both together. You can update your preference anytime from your account portal.",
+    a: "Yes. During sign-up you choose the Old Testament, the New Testament, or both. To change it later, email us and we will update your account.",
   },
   {
     q: "How does the free trial work?",
@@ -29,7 +29,7 @@ const faqs = [
   },
   {
     q: "Can I pause or cancel?",
-    a: "Yes, anytime. Log in to your account portal to pause deliveries, change your plan, or cancel. There are no cancellation fees and no long-term contracts.",
+    a: "You can cancel or change your paid plan anytime from the billing page in My Account. To pause deliveries, or to change your voice or Bible selection, email us. There are no cancellation fees and no long-term contracts.",
   },
   {
     q: "Is this affiliated with a specific church or denomination?",

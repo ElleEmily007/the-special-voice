@@ -1,19 +1,19 @@
-import { MousePointerClick, Settings2, PhoneIncoming } from "lucide-react";
+import { MousePointerClick, PhoneIncoming, Settings2 } from "lucide-react";
 
 const steps = [
   {
-    icon: MousePointerClick,
+    icon: Settings2,
     step: "1",
+    title: "Tell Us How to Reach You",
+    description:
+      "Share your name, email, and cell number. Pick a male or female voice, and choose Old Testament, New Testament, or both.",
+  },
+  {
+    icon: MousePointerClick,
+    step: "2",
     title: "Choose Your Plan",
     description:
       "Pick how many stories you want each day — 1, 2, or 3. Your free trial matches that plan: 9 days at 1/day, 6 days at 2/day, or 3 days at 3/day (card required; no charge until the trial ends).",
-  },
-  {
-    icon: Settings2,
-    step: "2",
-    title: "Set Up Your Preferences",
-    description:
-      "Tell us your phone number, pick a male or female voice, and choose Old Testament, New Testament, or both.",
   },
   {
     icon: PhoneIncoming,

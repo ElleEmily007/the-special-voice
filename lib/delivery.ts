@@ -139,12 +139,74 @@ export async function deliverToCustomer(
   };
 }
 
-/** Every customer eligible for a delivery run. */
-export async function findDeliverableCustomers(): Promise<DeliveryCustomer[]> {
-  return prisma.customer.findMany({
-    where: { status: { in: ["trial", "active"] }, optedOut: false },
-    select: DELIVERY_CUSTOMER_SELECT,
+function hasDeliverablePhone(phone: string): boolean {
+  return phone.replace(/\D/g, "").length >= 10;
+}
+
+/** Calendar day in US Eastern, which is the day a subscriber thinks of as "today". */
+function deliveryDay(date: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function alreadyDeliveredToday(lastDeliveredAt: Date | null, now: Date): boolean {
+  if (!lastDeliveredAt) return false;
+  return deliveryDay(lastDeliveredAt) === deliveryDay(now);
+}
+
+/**
+ * Sends today's stories once, the moment a new subscriber is saved.
+ *
+ * lastDeliveredAt is claimed first so the congratulations page and the Stripe
+ * webhook cannot both send. The daily cron then skips anyone already sent today.
+ * If nothing goes out, the claim is released so the next cron can retry.
+ */
+export async function deliverWelcomeIfNew(customer: DeliveryCustomer): Promise<void> {
+  if (!hasDeliverablePhone(customer.phone)) return;
+  if (customer.status === "paused" || customer.status === "cancelled") return;
+
+  const claimed = await prisma.customer.updateMany({
+    where: { id: customer.id, lastDeliveredAt: null },
+    data: { lastDeliveredAt: new Date() },
   });
+  if (claimed.count !== 1) return;
+
+  try {
+    const result = await deliverToCustomer(customer);
+    if (result.sent === 0) {
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: { lastDeliveredAt: null },
+      });
+    }
+  } catch (err) {
+    await prisma.customer
+      .update({ where: { id: customer.id }, data: { lastDeliveredAt: null } })
+      .catch(() => {});
+    throw err;
+  }
+}
+
+/** Every customer eligible for a delivery run. */
+export async function findDeliverableCustomers(now = new Date()): Promise<DeliveryCustomer[]> {
+  const customers = await prisma.customer.findMany({
+    where: { status: { in: ["trial", "active"] }, optedOut: false },
+    select: { ...DELIVERY_CUSTOMER_SELECT, lastDeliveredAt: true },
+  });
+  // A Stripe checkout can create a row before name, phone, and voice are known.
+  // Those people are not sent a voicemail. Anyone already sent today (the
+  // welcome drop) waits until tomorrow.
+  return customers
+    .filter(
+      (customer) =>
+        hasDeliverablePhone(customer.phone) &&
+        !alreadyDeliveredToday(customer.lastDeliveredAt, now),
+    )
+    .map(({ lastDeliveredAt: _lastDeliveredAt, ...customer }) => customer);
 }
 
 export interface RunSummary {

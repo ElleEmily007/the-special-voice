@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-import { upsertCustomerByStripeOrEmail } from "@/lib/customer-upsert";
+import { saveCustomerFromCheckoutSession } from "@/lib/checkout-customer";
 import { getPlanByPriceId } from "@/lib/plans";
 import Stripe from "stripe";
 
@@ -35,23 +35,9 @@ export async function POST(req: NextRequest) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
-      if (session.mode === "subscription" && session.customer) {
-        const stripeId = typeof session.customer === "string" ? session.customer : session.customer.id;
-        const subscriptionId =
-          typeof session.subscription === "string"
-            ? session.subscription
-            : session.subscription?.id ?? null;
-
-        // Customer record is created/updated in onboarding; here we ensure stripeId is linked.
-        // Match by email too so re-checkout with a new Stripe customer id does not collide.
-        await upsertCustomerByStripeOrEmail({
-          stripeId,
-          email: session.customer_email ?? "",
-          subscriptionId: subscriptionId ?? undefined,
-          planId: session.metadata?.planId ?? null,
-          status: "trial",
-        });
-      }
+      // Signup details are on the session metadata. trial_end is read inside
+      // so the end-of-trial and first-paid clips have a date to key off.
+      await saveCustomerFromCheckoutSession(session);
       break;
     }
 
@@ -79,6 +65,7 @@ export async function POST(req: NextRequest) {
           status,
           subscriptionId: sub.id,
           ...(plan ? { planId: plan.id, frequency: plan.frequency } : {}),
+          ...(sub.trial_end ? { trialEndsAt: new Date(sub.trial_end * 1000) } : {}),
         },
       });
       break;
@@ -109,6 +96,15 @@ export async function POST(req: NextRequest) {
       const invoice = event.data.object as Stripe.Invoice;
       const stripeId =
         typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id ?? "";
+      // The $0 invoice at the start of a trial also succeeds. If the trial end
+      // date is still in the future, leave status as trial so the end-of-trial
+      // clip can play.
+      const existing = await prisma.customer.findFirst({
+        where: { stripeId },
+        select: { trialEndsAt: true },
+      });
+      if (existing?.trialEndsAt && existing.trialEndsAt > new Date()) break;
+
       await prisma.customer.updateMany({
         where: { stripeId },
         data: { status: "active" },

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { readSignup, setSignupCookie, type SignupDraft } from "@/lib/signup";
 
 export const CONSENT_TEXT_SMS =
   "I agree to receive educational and informational automated text messages from Cleveribility, LLC regarding my free trial and subscription to our services selected by you. Message frequency varies. Message and data rates may apply. When you wish to STOP or unsubscribe, contact us at our opt-out form at www.cleveribility.com/stop. See our Privacy Policy and Terms of Service to learn more. Consent is not a condition of purchase.";
@@ -13,8 +14,24 @@ const OptInSchema = z.object({
     .string()
     .min(10, "Enter a valid US phone number")
     .regex(/^\+?[\d\s\-().]{10,}$/, "Invalid phone number format"),
+  voice: z.enum(["male", "female"]),
+  testament: z.enum(["old", "new", "both"]),
   consentSms: z.boolean().refine((v) => v === true, { message: "You must agree to continue" }),
 });
+
+/** Checkout calls this to see whether page 1 was finished. */
+export async function GET(req: NextRequest) {
+  const signup = readSignup(req);
+  if (!signup) {
+    return NextResponse.json({ error: "Sign-up details are missing" }, { status: 401 });
+  }
+  return NextResponse.json({
+    ok: true,
+    firstName: signup.firstName,
+    voice: signup.voice,
+    testament: signup.testament,
+  });
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,7 +53,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ ok: true });
+    const draft: SignupDraft = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      voice: data.voice,
+      testament: data.testament,
+    };
+
+    const response = NextResponse.json({ ok: true });
+    return setSignupCookie(response, draft);
   } catch (err: unknown) {
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: err.issues }, { status: 422 });
@@ -45,3 +72,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

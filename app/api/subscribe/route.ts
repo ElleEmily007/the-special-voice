@@ -1,17 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { getPriceId, getTrialDays } from "@/lib/plans";
+import { getPriceId, getTrialDays, getPlanById } from "@/lib/plans";
+import { readSignup } from "@/lib/signup";
 
 export async function POST(req: NextRequest) {
   try {
+    const signup = readSignup(req);
+    if (!signup) {
+      return NextResponse.json(
+        { error: "Please finish the sign-up page before paying." },
+        { status: 401 },
+      );
+    }
+
     const body = await req.json();
-    const { planId, email } = body as {
-      planId: string;
-      email?: string;
-    };
+    const { planId } = body as { planId?: string };
+    if (!planId || !getPlanById(planId)) {
+      return NextResponse.json({ error: "Choose a plan to continue." }, { status: 400 });
+    }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     const priceId = getPriceId(planId);
+    const profile = {
+      planId,
+      firstName: signup.firstName,
+      lastName: signup.lastName,
+      phone: signup.phone,
+      voice: signup.voice,
+      testament: signup.testament,
+    };
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -21,13 +38,13 @@ export async function POST(req: NextRequest) {
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
         trial_period_days: getTrialDays(planId),
-        metadata: { planId },
+        metadata: profile,
       },
-      customer_email: email ?? undefined,
+      customer_email: signup.email,
       success_url: `${appUrl}/onboarding?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/#pricing`,
+      cancel_url: `${appUrl}/checkout?plan=${encodeURIComponent(planId)}`,
       allow_promotion_codes: true,
-      metadata: { planId },
+      metadata: profile,
     });
 
     return NextResponse.json({ url: session.url });

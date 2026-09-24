@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
+import { saveCustomerFromCheckoutSession } from "@/lib/checkout-customer";
 import { upsertCustomerByStripeOrEmail } from "@/lib/customer-upsert";
 import { getPlanById, getPlanFrequency, getTrialDays } from "@/lib/plans";
 import { z } from "zod";
@@ -47,6 +48,9 @@ export async function GET(req: NextRequest) {
       if (!planId || !getPlanById(planId)) {
         return NextResponse.json({ error: "Plan not found for session" }, { status: 404 });
       }
+      // Webhook may not have landed yet. Writing here means the congratulations
+      // page does not depend on it, and delivery already has phone and voice.
+      await saveCustomerFromCheckoutSession(session);
       const plan = getPlanById(planId)!;
       return NextResponse.json({
         planId: plan.id,
