@@ -84,7 +84,14 @@ export default function HeroSamples() {
   }
 
   return (
-    <div className="mt-14 grid gap-3 sm:grid-cols-2 max-w-xl mx-auto w-full">
+    <div className="mt-14 max-w-xl mx-auto w-full">
+      <p className="text-[#f5c842] text-xs font-semibold uppercase tracking-widest mb-2">
+        Hear them first
+      </p>
+      <p className="text-white/75 text-sm sm:text-base leading-relaxed mb-4">
+        Choose a male voice or a female voice. Press play on David or Sarah — the same warm reading that will be waiting in your voicemail.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2">
       {SAMPLES.map(({ voice, name }) => {
         const src = urls[voice];
         const duration = durations[voice];
@@ -121,6 +128,7 @@ export default function HeroSamples() {
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
