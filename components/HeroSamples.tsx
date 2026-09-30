@@ -117,7 +117,9 @@ export default function HeroSamples() {
               disabled={!src}
               onClick={() => toggle(voice)}
               aria-label={isPlaying ? `Pause ${name} sample` : `Play ${name} sample`}
-              className="w-9 h-9 rounded-full bg-[#e8b800] hover:bg-[#f5c842] disabled:opacity-40 disabled:hover:bg-[#e8b800] flex items-center justify-center flex-shrink-0 transition-colors"
+              className={`w-9 h-9 rounded-full bg-[#e8b800] hover:bg-[#f5c842] disabled:opacity-40 disabled:hover:bg-[#e8b800] cursor-pointer flex items-center justify-center flex-shrink-0 transition-colors ${
+                src && !isPlaying ? "sample-play" : ""
+              }`}
             >
               {isPlaying ? (
                 <Pause size={14} className="fill-[#0f2035] text-[#0f2035]" />
