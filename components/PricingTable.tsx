@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { Check, Zap } from "lucide-react";
 import { PLANS } from "@/lib/plans";
+import SectionBackdrop from "./SectionBackdrop";
 
 export default function PricingTable() {
   return (
-    <section id="pricing" className="bg-[#0f2035] py-20 px-4">
-      <div className="max-w-5xl mx-auto">
+    <section id="pricing" className="relative overflow-hidden bg-[#0f2035] py-20 px-4">
+      <SectionBackdrop tone="navy" />
+      <div className="relative z-10 max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <span className="text-[#e8b800] font-semibold uppercase tracking-widest text-xs">
             Simple Pricing

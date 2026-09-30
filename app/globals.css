@@ -49,3 +49,104 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+@keyframes section-orb {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, 6%, 0) scale(1.08);
+  }
+}
+
+@keyframes section-orb-slow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-5%, -4%, 0) scale(1);
+  }
+}
+
+@keyframes section-wash {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: translate3d(-4%, 0, 0);
+  }
+  50% {
+    opacity: 0.22;
+    transform: translate3d(4%, 0, 0);
+  }
+}
+
+.section-orb {
+  animation: section-orb 22s ease-in-out infinite;
+}
+
+.section-orb-slow {
+  animation: section-orb-slow 32s ease-in-out infinite;
+}
+
+.section-wash {
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(232, 184, 0, 0.14) 50%,
+    transparent 80%
+  );
+  animation: section-wash 28s ease-in-out infinite;
+}
+
+.section-wash-cream {
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(232, 184, 0, 0.05) 50%,
+    transparent 70%
+  );
+}
+
+@keyframes section-wash-cream {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translate3d(-3%, 0, 0);
+  }
+  50% {
+    opacity: 0.55;
+    transform: translate3d(3%, 0, 0);
+  }
+}
+
+.section-wash.section-wash-cream {
+  animation: section-wash-cream 32s ease-in-out infinite;
+}
+
+.section-photo-overlay-navy {
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 32, 53, 0.38) 0%,
+    rgba(15, 32, 53, 0.22) 45%,
+    rgba(15, 32, 53, 0.48) 100%
+  );
+}
+
+.section-photo-overlay-cream {
+  background: linear-gradient(
+    to bottom,
+    rgba(253, 248, 238, 0.38) 0%,
+    rgba(253, 248, 238, 0.22) 40%,
+    rgba(253, 248, 238, 0.48) 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-orb,
+  .section-orb-slow,
+  .section-wash {
+    animation: none;
+  }
+}

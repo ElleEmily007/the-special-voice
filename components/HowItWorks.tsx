@@ -1,78 +1,74 @@
-import { MousePointerClick, PhoneIncoming, Settings2 } from "lucide-react";
+import SectionBackdrop from "./SectionBackdrop";
 
 const steps = [
   {
-    icon: Settings2,
-    step: "1",
-    title: "Tell Us How to Reach You",
+    step: "01",
+    title: "Tell us how to reach you",
     description:
-      "Share your name, email, and cell number. Pick a male or female voice, and choose Old Testament, New Testament, or both.",
+      "Share your name, email, and cell number. Choose a male or female voice, and select the Old Testament, the New Testament, or both.",
   },
   {
-    icon: MousePointerClick,
-    step: "2",
-    title: "Choose Your Plan",
+    step: "02",
+    title: "Choose your plan",
     description:
-      "Pick how many stories you want each day — 1, 2, or 3. Your free trial matches that plan: 9 days at 1/day, 6 days at 2/day, or 3 days at 3/day (card required; no charge until the trial ends).",
+      "Decide how many stories you want each day: one, two, or three. The free trial follows that plan — 9 days, 6 days, or 3 days. A card is required to start, and you are not charged until the trial ends.",
   },
   {
-    icon: PhoneIncoming,
-    step: "3",
-    title: "Stories Arrive Daily",
+    step: "03",
+    title: "Listen when you are ready",
     description:
-      "Each day, a warm, story-driven Bible reading lands gently in your voicemail. No ring, no interruption — just press play when you're ready.",
+      "Each day, a warm Bible story arrives in your voicemail. Your phone does not ring. Open the message and press play whenever it suits you.",
   },
+];
+
+const notes = [
+  "Male or female narration",
+  "One, two, or three stories a day",
+  "A free trial of 9, 6, or 3 days",
+  "Old Testament, New Testament, or both",
 ];
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="bg-[#fdf8ee] py-20 px-4">
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-14">
-          <span className="text-[#e8b800] font-semibold uppercase tracking-widest text-xs">
-            Simple as 1-2-3
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f2035] mt-2">
-            How The Special Voice Works
-          </h2>
-          <p className="text-[#0f2035]/60 mt-3 max-w-xl mx-auto">
-            We handle everything. You just press play.
+    <section id="how-it-works" className="relative overflow-hidden bg-[#fdf8ee] py-24 px-4">
+      <SectionBackdrop tone="cream" />
+      <div className="relative z-10 max-w-5xl mx-auto grid gap-12 lg:grid-cols-12 lg:gap-16 lg:items-start">
+        <div className="lg:col-span-4">
+          <p className="text-[#c99e00] text-xs font-semibold uppercase tracking-[0.22em]">
+            How it works
           </p>
+          <h2 className="mt-4 text-3xl sm:text-4xl font-semibold tracking-tight text-[#0f2035] leading-tight">
+            A daily reading, without a new habit to keep.
+          </h2>
+          <p className="mt-4 text-[#0f2035]/70 leading-relaxed">
+            You set it up once. We send a story to the voicemail you already have.
+          </p>
+          <ul className="mt-8 space-y-3">
+            {notes.map((note) => (
+              <li key={note} className="flex gap-3 text-sm text-[#0f2035]/75">
+                <span className="mt-2 h-px w-4 shrink-0 bg-[#e8b800]" aria-hidden />
+                <span>{note}</span>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {steps.map(({ icon: Icon, step, title, description }) => (
-            <div
+        <ol className="lg:col-span-8 border-t border-[#0f2035]/12">
+          {steps.map(({ step, title, description }) => (
+            <li
               key={step}
-              className="relative bg-white border border-[#0f2035]/8 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow"
+              className="grid grid-cols-[3.25rem_1fr] gap-4 border-b border-[#0f2035]/12 py-8 sm:grid-cols-[4.5rem_1fr] sm:gap-6"
             >
-              {/* Step badge */}
-              <div className="absolute -top-4 left-6 w-8 h-8 rounded-full bg-[#e8b800] flex items-center justify-center text-[#0f2035] font-black text-sm shadow">
+              <span className="text-sm font-medium tracking-[0.18em] text-[#c99e00] pt-1">
                 {step}
+              </span>
+              <div>
+                <h3 className="text-xl font-semibold text-[#0f2035]">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-[#0f2035]/70">{description}</p>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-[#0f2035]/5 flex items-center justify-center mb-4 mt-2">
-                <Icon size={24} className="text-[#0f2035]" />
-              </div>
-              <h3 className="text-[#0f2035] font-bold text-xl mb-2">{title}</h3>
-              <p className="text-[#0f2035]/60 text-sm leading-relaxed">{description}</p>
-            </div>
+            </li>
           ))}
-        </div>
-
-        {/* Stats row */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {[
-            { value: "2 Voices", label: "Choose male or female narration" },
-            { value: "3–9 Days", label: "Free trial length depends on your plan" },
-            { value: "3 Plans", label: "From 1 to 3 stories a day" },
-            { value: "2", label: "Old & New Testament to choose from" },
-          ].map(({ value, label }) => (
-            <div key={label} className="text-center">
-              <div className="text-3xl font-black text-[#0f2035]">{value}</div>
-              <div className="text-[#0f2035]/55 text-xs mt-1">{label}</div>
-            </div>
-          ))}
-        </div>
+        </ol>
       </div>
     </section>
   );

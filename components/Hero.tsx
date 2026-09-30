@@ -1,14 +1,17 @@
 import Link from "next/link";
-import { PhoneCall, Star, Play } from "lucide-react";
+import { PhoneCall, Play, Star } from "lucide-react";
+import HeroSamples from "./HeroSamples";
+import SectionBackdrop from "./SectionBackdrop";
 
 export default function Hero() {
   return (
     <section className="gradient-navy min-h-screen flex flex-col items-center justify-center text-center px-4 pt-24 pb-16 relative overflow-hidden">
-      {/* Decorative circles */}
-      <div className="absolute top-1/4 left-[-10%] w-96 h-96 rounded-full bg-[#e8b800]/5 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-[-10%] w-80 h-80 rounded-full bg-[#e8b800]/8 blur-3xl pointer-events-none" />
+      <SectionBackdrop
+        tone="navy"
+        imageSrc="/images/hero-bible.png"
+      />
 
-      <div className="relative max-w-4xl mx-auto">
+      <div className="relative z-10 max-w-4xl mx-auto">
         {/* Eyebrow badge */}
         <div className="inline-flex items-center gap-2 bg-[#e8b800]/15 border border-[#e8b800]/30 text-[#f5c842] text-xs font-semibold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
           <PhoneCall size={12} />
@@ -63,24 +66,7 @@ export default function Hero() {
           Plans from $12.95/mo
         </p>
 
-        {/* Voicemail visual mockup */}
-        <div className="mt-14 flex justify-center">
-          <div className="bg-white/8 backdrop-blur border border-white/15 rounded-2xl px-6 py-4 flex items-center gap-4 shadow-xl max-w-sm w-full">
-            <div className="w-12 h-12 rounded-full bg-[#e8b800]/20 flex items-center justify-center flex-shrink-0">
-              <PhoneCall size={22} className="text-[#e8b800]" />
-            </div>
-            <div className="text-left">
-              <p className="text-white text-sm font-semibold">New Voicemail</p>
-              <p className="text-white/50 text-xs">The Special Voice &nbsp;·&nbsp; 2 min 14 sec</p>
-              <p className="text-white/40 text-xs mt-0.5 italic">&ldquo;In the beginning God created…&rdquo;</p>
-            </div>
-            <div className="ml-auto">
-              <div className="w-9 h-9 rounded-full bg-[#e8b800] flex items-center justify-center">
-                <Play size={14} className="fill-[#0f2035] text-[#0f2035] ml-0.5" />
-              </div>
-            </div>
-          </div>
-        </div>
+        <HeroSamples />
       </div>
     </section>
   );

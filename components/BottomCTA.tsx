@@ -1,10 +1,15 @@
 import Link from "next/link";
 import { Play } from "lucide-react";
+import SectionBackdrop from "./SectionBackdrop";
 
 export default function BottomCTA() {
   return (
-    <section className="gradient-navy py-20 px-4 text-center">
-      <div className="max-w-2xl mx-auto">
+    <section className="relative overflow-hidden gradient-navy py-20 px-4 text-center">
+      <SectionBackdrop
+        tone="navy"
+        imageSrc="/images/cta-bible-close.png"
+      />
+      <div className="relative z-10 max-w-2xl mx-auto">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4 leading-tight">
           Ready to Make the Bible{" "}
           <span className="text-gradient-gold">Part of Your Day?</span>

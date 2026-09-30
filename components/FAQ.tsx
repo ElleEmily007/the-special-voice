@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import SectionBackdrop from "./SectionBackdrop";
 
 const faqs = [
   {
@@ -41,8 +42,9 @@ export default function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="bg-[#0f2035] py-20 px-4">
-      <div className="max-w-3xl mx-auto">
+    <section id="faq" className="relative overflow-hidden bg-[#0f2035] py-20 px-4">
+      <SectionBackdrop tone="navy" />
+      <div className="relative z-10 max-w-3xl mx-auto">
         <div className="text-center mb-12">
           <span className="text-[#e8b800] font-semibold uppercase tracking-widest text-xs">
             Questions &amp; Answers

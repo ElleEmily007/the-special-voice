@@ -1,4 +1,5 @@
-import { Star, Quote } from "lucide-react";
+import { Quote, Star } from "lucide-react";
+import SectionBackdrop from "./SectionBackdrop";
 
 const testimonials = [
   {
@@ -41,8 +42,9 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <section className="bg-[#fdf8ee] py-20 px-4">
-      <div className="max-w-5xl mx-auto">
+    <section className="relative overflow-hidden bg-[#fdf8ee] py-20 px-4">
+      <SectionBackdrop tone="cream" />
+      <div className="relative z-10 max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <span className="text-[#e8b800] font-semibold uppercase tracking-widest text-xs">
             Real Subscribers
